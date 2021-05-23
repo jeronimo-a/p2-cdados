@@ -1,6 +1,8 @@
 ''' Script de coleta de dados da API do Helium Network '''
 
-import tqdm
+from tqdm import tqdm
+from funcoes import *
+
 import json
 import requests
 import pandas as pd
@@ -62,6 +64,8 @@ for hotspot in hotspots:
 
 # -- Coleta dos dados de rendimento dos hotspots relevantes  --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+print('\nColetando dados de rendimento dos hotspots relevantes...')
+
 hotspots_dados = list()
 
 indice = 0
@@ -72,7 +76,7 @@ for hotspot in tqdm(hotspots_relevantes):
     dados['data de adicao'] = hotspot['timestamp_added']
     dados['endereco'] = hotspot['address']
     dados['altura'] = hotspot['status']['height']
-    dados['idade'] = diferenca_datas(data_hoje, dados['data de adicao'])
+    dados['idade'] = diferenca_datas_dias(data_hoje, dados['data de adicao'])
     
     endereco = dados['endereco']
     params = {'max_time': data_hoje, 'min_time': "2018-08-27T00:00:00Z"}
