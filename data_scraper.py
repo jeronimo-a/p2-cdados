@@ -80,7 +80,7 @@ for hotspot in tqdm(hotspots_relevantes):
     
     endereco = dados['endereco']
     params = {'max_time': data_hoje, 'min_time': "2018-08-27T00:00:00Z"}
-    dados_retorno = requests.get('https://api.helium.io/v1/hotspots/:%s/rewards/sum' % endereco, params)
+    dados_retorno = requests.get('https://api.helium.io/v1/hotspots/%s/rewards/sum' % endereco, params)
     dados_retorno = dados_retorno.json()['data']
     
     dados.update(dados_retorno)
