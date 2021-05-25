@@ -95,15 +95,43 @@ for hotspot in tqdm(hotspots_relevantes):
 
 # -- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+
+# -- Coleta dos dados da quantidade de hotspots proximos a cada hotspot relevante -- --- --- --- --- --- --- ---
+
+print('\nColetando dados de quantidade de hotspots próximos...')
+
+indice = 0
+for hotspot in tqdm(hotspots_dados):
+
+	nome = hotspot['nome']
+	filtro = dados_brutos['name'] == nome
+	dados_brutos_hotspot = dados_brutos.loc[filtro, :]
+	longitude = dados_brutos_hotspot['lng']
+	latitude = dados_brutos_hotspot['lat']
+
+	try:
+		longitude = float(dados_brutos_hotspot['lng'])
+		latitude = float(dados_brutos_hotspot['lat'])
+
+	except: continue
+
+	params = {'lat': latitude, 'lon': longitude, 'distance': 2000}
+	resposta = requests.get('https://api.helium.io/v1/hotspots/location/distance', params)
+
+	if str(resposta) == '<Response [200]>':
+		hotspot['hotspots proximos'] = len(resposta.json()['data'])
+
+	if indice % 50 == 0:
+        with open('hotspots_dados.json', 'w') as file:
+            json.dump({'dados': hotspots_dados}, file)
+    
+    indice += 1
+		
 # armazenamento final dos dados
 hotspots_dataframe = pd.DataFrame(hotspots_dados)
 writer = pd.ExcelWriter('hotspots_dados.xlsx')
 hotspots_dataframe.to_excel(writer)
 writer.save()
-
-
-
-
 
 
 
