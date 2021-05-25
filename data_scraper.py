@@ -93,8 +93,18 @@ for hotspot in tqdm(hotspots_relevantes):
     
     indice += 1
 
+with open('hotspots_dados.json', 'w') as file:
+	json.dump({'dados': hotspots_dados}, file)
+
 # -- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+with open('hotspots_dados.json') as file:
+	hotspots_dados = json.load(file)['dados']
+
+with open('dados_brutos.json') as file:
+	dados_brutos = json.load(file)['dados']
+
+dados_brutos = pd.DataFrame(dados_brutos)
 
 # -- Coleta dos dados da quantidade de hotspots proximos a cada hotspot relevante -- --- --- --- --- --- --- ---
 
@@ -122,10 +132,14 @@ for hotspot in tqdm(hotspots_dados):
 		hotspot['hotspots proximos'] = len(resposta.json()['data'])
 
 	if indice % 50 == 0:
-        with open('hotspots_dados.json', 'w') as file:
-            json.dump({'dados': hotspots_dados}, file)
-    
-    indice += 1
+		with open('hotspots_dados.json', 'w') as file:
+			json.dump({'dados': hotspots_dados}, file)
+
+	indice += 1
+
+
+with open('hotspots_dados.json', 'w') as file:
+    json.dump({'dados': hotspots_dados}, file)
 		
 # armazenamento final dos dados
 hotspots_dataframe = pd.DataFrame(hotspots_dados)
