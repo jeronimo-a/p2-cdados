@@ -50,7 +50,7 @@ with open('dados_brutos.json', 'w') as json_file:
 
 bloco_atual = requests.get('https://api.helium.io/v1/blocks/height').json()['data']['height']
 
-tolerancia = 24		# tolerância de atraso (número de blocos faltando)
+tolerancia = 128		# tolerância de atraso (número de blocos faltando)
 
 hotspots_relevantes = list()
 
@@ -84,6 +84,8 @@ for hotspot in tqdm(hotspots_relevantes):
     dados_retorno = dados_retorno.json()['data']
     
     dados.update(dados_retorno)
+
+    dados['por dia'] = dados['total'] / dados['idade']
     
     hotspots_dados.append(dados)
     
