@@ -17,7 +17,7 @@ def diferenca_datas_dias(data_inicial, data_final):
 
 	data_final = ano_final * 365.25 + mes_final * 365.25 / 12 + dia_final
 
-	return data_final - data_inicial
+	return data_inicial - data_final
 
 
 
