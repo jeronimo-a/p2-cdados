@@ -71,30 +71,30 @@ hotspots_dados = list()
 indice = 0
 for hotspot in tqdm(hotspots_relevantes):
     
-    dados = dict()
-    dados['nome'] = hotspot['name']
-    dados['data de adicao'] = hotspot['timestamp_added']
-    dados['endereco'] = hotspot['address']
-    dados['altura'] = hotspot['status']['height']
-    dados['idade'] = diferenca_datas_dias(data_hoje, dados['data de adicao'])
-    
-    endereco = dados['endereco']
-    params = {'max_time': data_hoje, 'min_time': "2018-08-27T00:00:00Z"}
-    dados_retorno = requests.get('https://api.helium.io/v1/hotspots/%s/rewards/sum' % endereco, params)
-    dados_retorno = dados_retorno.json()['data']
-    
-    dados.update(dados_retorno)
+	dados = dict()
+	dados['nome'] = hotspot['name']
+	dados['data de adicao'] = hotspot['timestamp_added']
+	dados['endereco'] = hotspot['address']
+	dados['altura'] = hotspot['status']['height']
+	dados['idade'] = diferenca_datas_dias(data_hoje, dados['data de adicao'])
 
-    try: dados['por dia'] = dados['total'] / dados['idade']
+	endereco = dados['endereco']
+	params = {'max_time': data_hoje, 'min_time': "2018-08-27T00:00:00Z"}
+	dados_retorno = requests.get('https://api.helium.io/v1/hotspots/%s/rewards/sum' % endereco, params)
+	dados_retorno = dados_retorno.json()['data']
+
+	dados.update(dados_retorno)
+
+	try: dados['por dia'] = dados['total'] / dados['idade']
 	except ZeroDivisionError: dados['por dia'] = dados['total']
-    
-    hotspots_dados.append(dados)
-    
-    if indice % 50 == 0:
-        with open('hotspots_dados.json', 'w') as file:
-            json.dump({'dados': hotspots_dados}, file)
-    
-    indice += 1
+
+	hotspots_dados.append(dados)
+
+	if indice % 50 == 0:
+	    with open('hotspots_dados.json', 'w') as file:
+	        json.dump({'dados': hotspots_dados}, file)
+
+	indice += 1
 
 with open('hotspots_dados.json', 'w') as file:
 	json.dump({'dados': hotspots_dados}, file)
