@@ -85,7 +85,8 @@ for hotspot in tqdm(hotspots_relevantes):
     
     dados.update(dados_retorno)
 
-    dados['por dia'] = dados['total'] / dados['idade']
+    try: dados['por dia'] = dados['total'] / dados['idade']
+	except ZeroDivisionError: dados['por dia'] = dados['total']
     
     hotspots_dados.append(dados)
     
