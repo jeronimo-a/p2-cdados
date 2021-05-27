@@ -39,7 +39,7 @@ except KeyError: mais_paginas = False
 todos_hotspots = dados['data']
 
 # print de verbose
-print('\t' + str(len(hotspots)))
+print('\t' + str(len(todos_hotspots)))
 
 # loop de download das páginas
 while mais_paginas:
@@ -52,7 +52,7 @@ while mais_paginas:
     todos_hotspots += dados['data']
 
     # print de verbose
-    print('\t' + str(len(hotspots)))
+    print('\t' + str(len(todos_hotspots)))
 
     # cláusula de finalização do loop
     try: cursor = dados['cursor']
