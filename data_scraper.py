@@ -1,154 +1,209 @@
-''' Script de coleta de dados da API do Helium Network '''
+'''
+Script de coleta de dados da API do Helium Network
+
+PASSO 1: coleta dos dados sobre todos os hotspots existentes;
+PASSO 2: coleta dos dados de rendimento de cada hotspot;
+PASSO 3: coleta das quantidades de hotspots proximos para cada hotspot.
+
+'''
 
 from tqdm import tqdm
 from funcoes import *
 
+import os
 import json
 import requests
 import pandas as pd
 import datetime as dt
 
-
+# data de hoje para coleta de dados dependentes da data
 data_hoje = str(dt.date.today())
-data_hoje = "%sT00:00:00Z" % data_hoje
+data_hora_hoje = "%sT00:00:00Z" % data_hoje
 
 
-# --  Coleta dos dados sobre os hotspots existentes	 --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+# PASSO 1: coleta dos dados sobre os hotspots existentes --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 1
 
+# prints de verbose
 print('Coletando dados sobre os hotspots existentes...\n')
 print('\t0')
 
+# coleta da primeira página da lista de hotspots
 resposta = requests.get('https://api.helium.io/v1/hotspots')
 dados = resposta.json()
-cursor = dados['cursor']
-hotspots = dados['data']
 
+# verifica se há, de fato, mais páginas
+try: cursor = dados['cursor']; mais_paginas = True
+except KeyError: mais_paginas = False
+
+# lista de dicionários base
+todos_hotspots = dados['data']
+
+# print de verbose
 print('\t' + str(len(hotspots)))
 
-while True:
+# loop de download das páginas
+while mais_paginas:
 
+	# coleta da página em questão a partir do cursor da anterior
     resposta = requests.get('https://api.helium.io/v1/hotspots?cursor=' + cursor)
-
     dados = resposta.json()
-    hotspots += dados['data']
 
+    # adição dos dados da página à lista completa
+    todos_hotspots += dados['data']
+
+    # print de verbose
     print('\t' + str(len(hotspots)))
 
+    # cláusula de finalização do loop
     try: cursor = dados['cursor']
     except KeyError: break
 
-# -- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+'''
+PASSO 1 finalizado, daqui sai:
+	- todos_hotspots -> lista de dicionários, cada dicionário representa um hotspot
+'''
+
+# -- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 1'
 
 
 # armazenamento dos dados brutos sobre os hotspots
-dados_brutos = {'dados': hotspots}
-with open('dados_brutos.json', 'w') as json_file:
-	json.dump(dados_brutos, json_file)
+dados_armazentamento = {'data': todos_hotspots, 'date': data_hoje}
+with open('dados/todos_hotspots_%s.json', 'w') as json_file:
+	json.dump(dados_armazentamento, json_file)
 
 
-# --  Filtragem dos hotspots "inativos"	 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+# PASSO 2: coleta dos dados de rendimento dos hotspots 	 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 2
 
-bloco_atual = requests.get('https://api.helium.io/v1/blocks/height').json()['data']['height']
+print('\nColetando dados de rendimento dos hotspots...')
 
-tolerancia = 128		# tolerância de atraso (número de blocos faltando)
-
-hotspots_relevantes = list()
-
-for hotspot in hotspots:
-    altura = hotspot['status']['height']
-    if altura != None:
-        if altura >= bloco_atual - tolerancia: hotspots_relevantes.append(hotspot)
-
-# -- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-# -- Coleta dos dados de rendimento dos hotspots relevantes  --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-print('\nColetando dados de rendimento dos hotspots relevantes...')
-
-hotspots_dados = list()
+# dicionário principal
+dados_brutos = list()
 
 indice = 0
-for hotspot in tqdm(hotspots_relevantes):
+for hotspot in tqdm(todos_hotspots):
     
+    # dicionário base para o hotspot
 	dados = dict()
-	dados['nome'] = hotspot['name']
-	dados['data de adicao'] = hotspot['timestamp_added']
-	dados['endereco'] = hotspot['address']
-	dados['altura'] = hotspot['status']['height']
-	dados['idade'] = diferenca_datas_dias(data_hoje, dados['data de adicao'])
+	dados.update(hotspot)
+	dados['age'] = diferenca_datas_dias(data_hora_hoje, dados['timestamp_added'])
 
-	endereco = dados['endereco']
-	params = {'max_time': data_hoje, 'min_time': "2018-08-27T00:00:00Z"}
-	dados_retorno = requests.get('https://api.helium.io/v1/hotspots/%s/rewards/sum' % endereco, params)
-	dados_retorno = dados_retorno.json()['data']
+	# parâmetros para a coleta de dados
+	endereco = dados['address']
+	params = {'max_time': data_hora_hoje, 'min_time': "2018-08-27T00:00:00Z"}
 
-	dados.update(dados_retorno)
+	# coleta de dados da primeira página
+	resposta = requests.get('https://api.helium.io/v1/hotspots/%s/rewards' % endereco, params)
+	recompensas = resposta.json()['data']
+	try: cursor = resposta.json()['cursor']; mais_paginas = True
+	except KeyError: mais_paginas = False
 
-	try: dados['por dia'] = dados['total'] / dados['idade']
-	except ZeroDivisionError: dados['por dia'] = dados['total']
+	# coleta das demais páginas (se houver)
+	while mais_paginas:
 
-	hotspots_dados.append(dados)
+		# coleta da página em questão a partir do cursor da anterior
+	    resposta = requests.get('https://api.helium.io/v1/hotspots?cursor=' + cursor)
+	    dados_resposta = resposta.json()
 
+	    # adição dos dados da página à lista completa
+	    recompensas += dados_resposta['data']
+
+	    # print de verbose
+	    print('\t' + str(len(hotspots)))
+
+	    # cláusula de finalização do loop
+	    try: cursor = dados_resposta['cursor']
+	    except KeyError: break
+
+	# adição das recompensas ao dicionário do hotspot
+	dados['rewards'] = recompensas
+
+	# adição do dicionário do hotspot à lista geral
+	dados_brutos.append(dados)
+
+	# armazenamento de dados preventivo
 	if indice % 50 == 0:
-	    with open('hotspots_dados.json', 'w') as file:
-	        json.dump({'dados': hotspots_dados}, file)
+	    with open('dados/dados_brutos_%s.json' % data_hoje, 'w') as file:
+	        json.dump({'data': dados_brutos, 'date': data_hoje}, file)
 
 	indice += 1
 
-with open('hotspots_dados.json', 'w') as file:
-	json.dump({'dados': hotspots_dados}, file)
+# armazenamento final dos dados em questão
+with open('dados/dados_brutos_%s.json' % data_hoje, 'w') as file:
+	json.dump({'data': dados_brutos, 'date': data_hoje}, file)
 
-# -- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+# remove os dados incompletos dos hotspots
+os.system('rm dados/todos_hotspots_%s.json' % data_hoje)
 
-with open('hotspots_dados.json') as file:
-	hotspots_dados = json.load(file)['dados']
+'''
+PASSO 2 finalizado, daqui dai:
+	- dados_brutos -> lista de dicionários, cada dict representa um hotspot
+'''
 
-with open('dados_brutos.json') as file:
-	dados_brutos = json.load(file)['dados']
+# -- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 2'
 
-dados_brutos = pd.DataFrame(dados_brutos)
+# PASSO 3: Coleta dos dados da quantidade de hotspots proximos a cada hotspot relevante  --- --- --- --- --- --- --- 3
 
-# -- Coleta dos dados da quantidade de hotspots proximos a cada hotspot relevante -- --- --- --- --- --- --- ---
-
+# print de verbose
 print('\nColetando dados de quantidade de hotspots próximos...')
 
+# loop de coleta
 indice = 0
-for hotspot in tqdm(hotspots_dados):
+for hotspot in tqdm(dados_brutos):
 
-	nome = hotspot['nome']
-	filtro = dados_brutos['name'] == nome
-	dados_brutos_hotspot = dados_brutos.loc[filtro, :]
-	longitude = dados_brutos_hotspot['lng']
-	latitude = dados_brutos_hotspot['lat']
+	# renome das informações relevantes
+	longitude = hotspot['lng']
+	latitude = hotspot['lat']
 
-	try:
-		longitude = float(dados_brutos_hotspot['lng'])
-		latitude = float(dados_brutos_hotspot['lat'])
-
+	# verificação das informações relevantes
+	try: longitude = float(hotspot['lng']); latitude = float(hotspot['lat'])
 	except: continue
 
+	# determinação dos parâmetros de solicitação
 	params = {'lat': latitude, 'lon': longitude, 'distance': 2000}
+
+	# solicitação
 	resposta = requests.get('https://api.helium.io/v1/hotspots/location/distance', params)
 
-	if str(resposta) == '<Response [200]>':
-		hotspot['hotspots proximos'] = len(resposta.json()['data'])
+	# bandeira de páginas extras
+	mais_paginas = False
 
+	# caso resposta válida
+	if str(resposta) == '<Response [200]>':
+		dados_resposta = resposta.json()['data']
+		try: cursor = resposta.json()['cursor']; mais_paginas = True
+		except KeyError: mais_paginas = False
+		hotspot['nearby hotspots'] = len(dados_resposta)
+
+	# caso mais páginas
+	while mais_paginas:
+
+		# solicitação
+		resposta = requests.get('https://api.helium.io/v1/hotspots/location/distance?cursor=%s' % cursor, params)
+
+		# caso resposta válida
+		if str(resposta) == '<Response [200]>':
+			dados_resposta = resposta.json()['data']
+			try: cursor = resposta.json()['cursor']; mais_paginas = True
+			except KeyError: mais_paginas = False
+			hotspot['nearby hotspots'] += len(dados_resposta)
+
+	# armazentamento de segurança
 	if indice % 50 == 0:
-		with open('hotspots_dados.json', 'w') as file:
-			json.dump({'dados': hotspots_dados}, file)
+		with open('dados_brutos_incompletos_%s.json' % data_hoje, 'w') as file:
+			json.dump({'dados': dados_brutos}, file)
 
 	indice += 1
 
+# armazenamento final
+with open('dados_brutos_incompletos_%s.json' % data_hoje, 'w') as file:
+    json.dump({'dados': dados_brutos}, file)
 
-with open('hotspots_dados.json', 'w') as file:
-    json.dump({'dados': hotspots_dados}, file)
-		
-# armazenamento final dos dados
-hotspots_dataframe = pd.DataFrame(hotspots_dados)
-writer = pd.ExcelWriter('hotspots_dados.xlsx')
-hotspots_dataframe.to_excel(writer)
-writer.save()
+'''
+PASSO 3 finalizado, daqui sai:
+	- dados_brutos -> lista de dicionários
+'''
+
+# -- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 3'
 
 
 
