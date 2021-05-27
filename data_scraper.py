@@ -68,7 +68,7 @@ PASSO 1 finalizado, daqui sai:
 
 # armazenamento dos dados brutos sobre os hotspots
 dados_armazentamento = {'data': todos_hotspots, 'date': data_hoje}
-with open('dados/todos_hotspots_%s.json', 'w') as json_file:
+with open('dados/todos_hotspots_%s.json' % data_hoje, 'w') as json_file:
 	json.dump(dados_armazentamento, json_file)
 
 
