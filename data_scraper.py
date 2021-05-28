@@ -148,7 +148,7 @@ print('\nColetando dados de quantidade de hotspots próximos...')
 
 # loop de coleta
 indice = 0
-for hotspot in tqdm(dados_brutos):
+for hotspot in tqdm(todos_hotspots):
 
 	# renome das informações relevantes
 	longitude = hotspot['lng']
@@ -186,6 +186,8 @@ for hotspot in tqdm(dados_brutos):
 			try: cursor = resposta.json()['cursor']; mais_paginas = True
 			except KeyError: mais_paginas = False
 			hotspot['nearby hotspots'] += len(dados_resposta)
+
+	dados_brutos.update(todos_hotspots)
 
 	# armazentamento de segurança
 	if indice % 50 == 0:
