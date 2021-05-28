@@ -105,7 +105,8 @@ for hotspot in tqdm(todos_hotspots):
 	    dados_resposta = resposta.json()
 
 	    # adição dos dados da página à lista completa
-	    recompensas += dados_resposta['data']
+	    try: recompensas += dados_resposta['data']
+		except KeyError: pass
 
 	    # print de verbose
 	    print('\t' + str(len(hotspots)))
