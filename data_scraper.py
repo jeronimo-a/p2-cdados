@@ -108,9 +108,6 @@ for hotspot in tqdm(todos_hotspots):
 		try: recompensas += dados_resposta['data']
 		except KeyError: pass
 
-		# print de verbose
-		print('\t' + str(len(hotspots)))
-
 		# cláusula de finalização do loop
 		try: cursor = dados_resposta['cursor']
 		except KeyError: break
