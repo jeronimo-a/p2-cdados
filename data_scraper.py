@@ -101,19 +101,19 @@ for hotspot in tqdm(todos_hotspots):
 	while mais_paginas:
 
 		# coleta da página em questão a partir do cursor da anterior
-	    resposta = requests.get('https://api.helium.io/v1/hotspots?cursor=' + cursor)
-	    dados_resposta = resposta.json()
+		resposta = requests.get('https://api.helium.io/v1/hotspots?cursor=' + cursor)
+		dados_resposta = resposta.json()
 
-	    # adição dos dados da página à lista completa
-	    try: recompensas += dados_resposta['data']
+		# adição dos dados da página à lista completa
+		try: recompensas += dados_resposta['data']
 		except KeyError: pass
 
-	    # print de verbose
-	    print('\t' + str(len(hotspots)))
+		# print de verbose
+		print('\t' + str(len(hotspots)))
 
-	    # cláusula de finalização do loop
-	    try: cursor = dados_resposta['cursor']
-	    except KeyError: break
+		# cláusula de finalização do loop
+		try: cursor = dados_resposta['cursor']
+		except KeyError: break
 
 	# adição das recompensas ao dicionário do hotspot
 	dados['rewards'] = recompensas
