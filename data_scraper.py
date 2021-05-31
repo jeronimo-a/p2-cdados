@@ -199,8 +199,9 @@ for hotspot in tqdm(todos_hotspots):
 	indice += 1
 
 # armazenamento final
-with open('dados_brutos_incompletos_%s.json' % data_hoje, 'w') as file:
-    json.dump({'dados': dados_brutos}, file)
+os.system('rm dados_brutos_incompletos_%s.json' % data_hoje)
+with open('dados_brutos_%s.json' % data_hoje, 'w') as file:
+    json.dump({'data': dados_brutos, 'date': data_hoje}, file)
 
 '''
 PASSO 3 finalizado, daqui sai:
