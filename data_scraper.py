@@ -13,6 +13,7 @@ from funcoes import *
 import os
 import json
 import requests
+import numpy as np
 import pandas as pd
 import datetime as dt
 
@@ -154,7 +155,10 @@ for hotspot in tqdm(todos_hotspots):
 
 	# verificação das informações relevantes
 	try: longitude = float(hotspot['lng']); latitude = float(hotspot['lat'])
-	except: continue
+	except:
+		hotspot['nearby hotspots'] = np.nan
+		dados_brutos[indice].update(hotspot)
+		continue
 
 	# determinação dos parâmetros de solicitação
 	params = {'lat': latitude, 'lon': longitude, 'distance': 2000}
@@ -185,7 +189,7 @@ for hotspot in tqdm(todos_hotspots):
 			except KeyError: mais_paginas = False
 			hotspot['nearby hotspots'] += len(dados_resposta)
 
-	dados_brutos.update(todos_hotspots)
+	dados_brutos[indice].update(hotspot)
 
 	# armazentamento de segurança
 	if indice % 50 == 0:
