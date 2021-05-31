@@ -121,13 +121,13 @@ for hotspot in tqdm(todos_hotspots):
 
 	# armazenamento de dados preventivo
 	if indice % 50 == 0:
-	    with open('dados/dados_brutos_%s.json' % data_hoje, 'w') as file:
+	    with open('dados/dados_brutos_incompletos_%s.json' % data_hoje, 'w') as file:
 	        json.dump({'data': dados_brutos, 'date': data_hoje}, file)
 
 	indice += 1
 
 # armazenamento final dos dados em questão
-with open('dados/dados_brutos_%s.json' % data_hoje, 'w') as file:
+with open('dados/dados_brutos_incompletos_%s.json' % data_hoje, 'w') as file:
 	json.dump({'data': dados_brutos, 'date': data_hoje}, file)
 
 # remove os dados incompletos dos hotspots
@@ -199,6 +199,7 @@ for hotspot in tqdm(todos_hotspots):
 	indice += 1
 
 # armazenamento final
+os.system('rm todos_hotspots_%s.json' % data_hoje)
 os.system('rm dados_brutos_incompletos_%s.json' % data_hoje)
 with open('dados_brutos_%s.json' % data_hoje, 'w') as file:
     json.dump({'data': dados_brutos, 'date': data_hoje}, file)
