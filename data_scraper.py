@@ -149,10 +149,6 @@ print('\nColetando dados de quantidade de hotspots próximos...')
 indice = 0
 for hotspot in tqdm(todos_hotspots):
 
-	# renome das informações relevantes
-	longitude = hotspot['lng']
-	latitude = hotspot['lat']
-
 	# verificação das informações relevantes
 	try: longitude = float(hotspot['lng']); latitude = float(hotspot['lat'])
 	except:
