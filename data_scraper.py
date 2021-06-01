@@ -130,8 +130,6 @@ for hotspot in tqdm(todos_hotspots):
 with open('dados/dados_brutos_incompletos_%s.json' % data_hoje, 'w') as file:
 	json.dump({'data': dados_brutos, 'date': data_hoje}, file)
 
-# remove os dados incompletos dos hotspots
-os.system('rm dados/todos_hotspots_%s.json' % data_hoje)
 
 '''
 PASSO 2 finalizado, daqui dai:
