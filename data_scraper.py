@@ -92,29 +92,12 @@ for hotspot in tqdm(todos_hotspots):
 	endereco = dados['address']
 	params = {'max_time': data_hora_hoje, 'min_time': "2018-08-27T00:00:00Z"}
 
-	# coleta de dados da primeira página
-	resposta = requests.get('https://api.helium.io/v1/hotspots/%s/rewards' % endereco, params)
+	# coleta de dados de recompensas
+	resposta = requests.get('https://api.helium.io/v1/hotspots/%s/rewards/sum' % endereco, params)
 	recompensas = resposta.json()['data']
-	try: cursor = resposta.json()['cursor']; mais_paginas = True
-	except KeyError: mais_paginas = False
-
-	# coleta das demais páginas (se houver)
-	while mais_paginas:
-
-		# coleta da página em questão a partir do cursor da anterior
-		resposta = requests.get('https://api.helium.io/v1/hotspots?cursor=' + cursor)
-		dados_resposta = resposta.json()
-
-		# adição dos dados da página à lista completa
-		try: recompensas += dados_resposta['data']
-		except KeyError: pass
-
-		# cláusula de finalização do loop
-		try: cursor = dados_resposta['cursor']
-		except KeyError: break
 
 	# adição das recompensas ao dicionário do hotspot
-	dados['rewards'] = recompensas
+	dados.update(recompensas)
 
 	# adição do dicionário do hotspot à lista geral
 	dados_brutos.append(dados)
